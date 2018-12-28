@@ -7,4 +7,6 @@ public interface ApiKeyService {
     ApiKey getApiKeyBySession(String sessionToken);
 
     ApiKey save(ApiKey apiKey);
+
+    boolean existByToken(String token);
 }

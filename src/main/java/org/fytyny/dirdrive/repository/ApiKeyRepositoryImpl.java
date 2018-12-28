@@ -6,6 +6,8 @@ import org.fytyny.dirdrive.model.ApiKey;
 import javax.enterprise.inject.Model;
 import javax.inject.Inject;
 import javax.persistence.EntityManager;
+import javax.persistence.Query;
+import java.util.List;
 import java.util.UUID;
 
 @Model
@@ -31,5 +33,13 @@ public class ApiKeyRepositoryImpl implements ApiKeyRepository {
         } else {
             return entityManager.merge(object);
         }
+    }
+
+    @Override
+    public ApiKey getByToken(String token) {
+        Query query = entityManager.createQuery("SELECT s from ApiKey s where s.token = :token");
+        query.setParameter("token",token);
+        List resultList = query.getResultList();
+        return resultList.isEmpty() ? null : (ApiKey) resultList.get(0);
     }
 }

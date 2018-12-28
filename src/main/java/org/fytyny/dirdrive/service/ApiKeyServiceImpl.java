@@ -34,4 +34,9 @@ public class ApiKeyServiceImpl implements  ApiKeyService{
     public ApiKey save(ApiKey apiKey) {
         return apiKeyRepository.save(apiKey);
     }
+
+    @Override
+    public boolean existByToken(String token) {
+        return apiKeyRepository.getByToken(token) != null;
+    }
 }

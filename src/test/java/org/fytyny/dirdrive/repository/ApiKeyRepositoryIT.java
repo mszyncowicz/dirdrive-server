@@ -30,7 +30,19 @@ public class ApiKeyRepositoryIT {
         Assert.assertEquals(apiKey,apiKeyRepository.getById(apiKey.getId()));
     }
 
-    ApiKey generateRandomApiKey(){
+    @Test
+    public void getByTokenTest(){
+        ApiKey apiKey = generateRandomApiKey();
+        apiKeyRepository.entityManager.getTransaction().begin();
+        apiKeyRepository.save(apiKey);
+        apiKeyRepository.entityManager.getTransaction().commit();
+
+        ApiKey byToken = apiKeyRepository.getByToken(apiKey.getToken());
+        Assert.assertNotNull(byToken);
+        Assert.assertEquals(apiKey,byToken);
+    }
+
+    private ApiKey generateRandomApiKey(){
         ApiKey apiKey = new ApiKey();
         apiKey.setId(UUID.randomUUID());
         apiKey.setToken(Session.generateRandom(10));
