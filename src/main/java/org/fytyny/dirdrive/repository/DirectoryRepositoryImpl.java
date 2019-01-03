@@ -6,6 +6,7 @@ import javax.enterprise.inject.Model;
 import javax.inject.Inject;
 import javax.persistence.EntityManager;
 import javax.persistence.Query;
+import java.io.File;
 import java.util.List;
 import java.util.UUID;
 
@@ -40,4 +41,5 @@ public class DirectoryRepositoryImpl implements DirectoryRepository {
         List resultList = query.getResultList();
         return resultList.isEmpty() ? null : (Directory) resultList.get(0);
     }
+
 }

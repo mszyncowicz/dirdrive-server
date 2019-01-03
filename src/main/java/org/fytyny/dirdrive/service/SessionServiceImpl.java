@@ -24,4 +24,9 @@ public class SessionServiceImpl implements SessionService {
         session.setId(UUID.randomUUID());
         return sessionRepository.save(session);
     }
+
+    @Override
+    public Session getSessionByToken(String token){
+        return sessionRepository.getByToken(token);
+    }
 }

@@ -1,6 +1,7 @@
 package org.fytyny.dirdrive.service;
 
 import org.fytyny.dirdrive.model.ApiKey;
+import org.fytyny.dirdrive.model.Directory;
 
 public interface ApiKeyService {
 
@@ -9,4 +10,6 @@ public interface ApiKeyService {
     ApiKey save(ApiKey apiKey);
 
     boolean existByToken(String token);
+
+    boolean containsDirectory(ApiKey apiKey, Directory directory);
 }

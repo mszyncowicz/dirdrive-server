@@ -1,5 +1,6 @@
 package org.fytyny.dirdrive.service;
 
+import lombok.Setter;
 import org.fytyny.dirdrive.model.ApiKey;
 import org.fytyny.dirdrive.model.Directory;
 import org.fytyny.dirdrive.model.Session;
@@ -8,6 +9,11 @@ import org.fytyny.dirdrive.repository.DirectoryRepository;
 import javax.ejb.Stateless;
 import javax.enterprise.inject.Any;
 import javax.inject.Inject;
+import java.io.File;
+import java.io.FileFilter;
+import java.io.FilenameFilter;
+import java.util.Arrays;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
@@ -51,5 +57,21 @@ public class DirectoryServiceImpl implements DirectoryService {
             apiKeyService.save(bySessionToken);
         }
         return result;
+    }
+
+    @Override
+    public List<File> getFilesOfDir(Directory directory, Session session) {
+        ApiKey bySessionToken = getBySessionToken(session.getToken());
+        if (!apiKeyService.containsDirectory(bySessionToken,directory)){
+            throw new IllegalArgumentException();
+        }
+        File file = new File(directory.getPath());
+        return new LinkedList<File>(Arrays.asList(file.listFiles()));
+    }
+
+    @Override
+    public Optional<File> getSingleFile(String fileName, Directory directory, Session session) {
+        List<File> filesOfDir = getFilesOfDir(directory, session);
+        return filesOfDir.stream().filter(f -> f.getName().equals(fileName)).findAny();
     }
 }

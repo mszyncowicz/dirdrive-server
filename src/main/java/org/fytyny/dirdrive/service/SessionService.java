@@ -7,4 +7,5 @@ public interface SessionService {
 
     Session createSession(ApiKey apiKey);
 
+    Session getSessionByToken(String token);
 }

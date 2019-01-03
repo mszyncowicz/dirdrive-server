@@ -2,6 +2,7 @@ package org.fytyny.dirdrive.service;
 
 import lombok.Setter;
 import org.fytyny.dirdrive.model.ApiKey;
+import org.fytyny.dirdrive.model.Directory;
 import org.fytyny.dirdrive.model.Session;
 import org.fytyny.dirdrive.repository.ApiKeyRepository;
 import org.fytyny.dirdrive.repository.SessionRepository;
@@ -9,6 +10,8 @@ import org.fytyny.dirdrive.repository.SessionRepository;
 import javax.ejb.Stateless;
 import javax.enterprise.inject.Any;
 import javax.inject.Inject;
+import java.util.stream.Collector;
+import java.util.stream.Collectors;
 
 @Stateless
 public class ApiKeyServiceImpl implements  ApiKeyService{
@@ -38,5 +41,10 @@ public class ApiKeyServiceImpl implements  ApiKeyService{
     @Override
     public boolean existByToken(String token) {
         return apiKeyRepository.getByToken(token) != null;
+    }
+
+    @Override
+    public boolean containsDirectory(ApiKey apiKey, Directory directory) {
+        return existByToken(apiKey.getToken()) && apiKey.getDirectoryList().stream().map(d -> d.getPath()).collect(Collectors.toList()).contains(directory.getPath());
     }
 }

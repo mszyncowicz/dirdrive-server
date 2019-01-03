@@ -2,6 +2,8 @@ package org.fytyny.dirdrive.bean;
 
 import org.fytyny.dirdrive.model.ApiKey;
 import org.fytyny.dirdrive.service.ApiKeyService;
+import org.slf4j.Logger;
+
 import java.util.UUID;
 
 import javax.annotation.PostConstruct;
@@ -21,10 +23,16 @@ public class TempApiKeyBean {
     @Inject
     ApiKeyService apiKeyService;
 
+    @Inject
+    Logger logger;
+
     @PostConstruct
     public void init(){
         if (!apiKeyService.existByToken(TEMP_TOKEN)){
             getTempApiKey();
+            logger.info("Key created");
+        } else {
+            logger.info("Key exists");
         }
     }
 
