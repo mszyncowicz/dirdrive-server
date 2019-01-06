@@ -6,4 +6,23 @@ import lombok.Data;
 public class GeneralResponseDTO {
     private String message;
     private Integer code;
+
+    public GeneralResponseDTO(){
+
+    }
+
+    public GeneralResponseDTO(String message, Integer code){
+        this.message = message;
+        this.code = code;
+    }
+    public static GeneralResponseDTO authenticationFailed() {
+        GeneralResponseDTO generalResponseDTO = new GeneralResponseDTO();
+        generalResponseDTO.message = "Authentication failed";
+        generalResponseDTO.setCode(401);
+        return generalResponseDTO;
+    }
+
+    public static GeneralResponseDTO directoryNotFound() {
+        return new GeneralResponseDTO("Could not find directory", 400);
+    }
 }

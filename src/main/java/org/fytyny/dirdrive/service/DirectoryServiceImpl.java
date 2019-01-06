@@ -66,7 +66,7 @@ public class DirectoryServiceImpl implements DirectoryService {
             throw new IllegalArgumentException();
         }
         File file = new File(directory.getPath());
-        return new LinkedList<File>(Arrays.asList(file.listFiles()));
+        return new LinkedList<File>(Arrays.stream(file.listFiles()).filter(f->!f.isDirectory()).collect(Collectors.toList()));
     }
 
     @Override

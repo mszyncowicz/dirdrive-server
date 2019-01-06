@@ -21,6 +21,7 @@ import org.mockito.Spy;
 import org.mockito.runners.MockitoJUnitRunner;
 import org.mockito.stubbing.Answer;
 
+import javax.transaction.*;
 import javax.ws.rs.core.Response;
 
 import java.io.File;
@@ -44,7 +45,6 @@ public class DirectoryControllerTest {
     private final static String SESSION_TOKEN = "Working token";
     private final static String API_TOKEN = "Working api token";
 
-    @Mock
     ResponseService responseService;
 
     @Mock
@@ -56,7 +56,8 @@ public class DirectoryControllerTest {
     @Mock
     DirectoryService directoryService;
 
-
+    @Mock
+    UserTransaction userTransaction;
 
     @Spy
     DirectoryController directoryController;
@@ -80,20 +81,19 @@ public class DirectoryControllerTest {
         Session session = getSession(SESSION_TOKEN, apiKeyService.getApiKeyBySession(SESSION_TOKEN));
 
         when(sessionService.getSessionByToken(SESSION_TOKEN)).thenReturn(session);
-        directoryController.responseService = mock(ResponseService.class, (Answer)  a ->{
+        responseService = mock(ResponseService.class, (Answer)  a ->{
             throw new IllegalStateException();
         });
-
+        directoryController.responseService = responseService;
+        directoryController.userTransaction = userTransaction;
     }
 
     @Test
-    public void shouldNotAddDirectoryWhenWrongSession(){
+    public void shouldNotAddDirectoryWhenWrongSession() throws HeuristicRollbackException, HeuristicMixedException, NotSupportedException, RollbackException, SystemException {
         doAnswer(a ->{
             Assert.assertTrue(a.getArguments()[0] instanceof GeneralResponseDTO);
             return null;
-        }).when(responseService).error(any(),eq(401));
-
-        responseService.error(null);
+        }).when(responseService).error(anyObject(),eq(401));
         DirectoryDTO directoryDTO = new DirectoryDTO();
         directoryDTO.setPath("c:/windows");
 
@@ -103,13 +103,12 @@ public class DirectoryControllerTest {
     }
 
     @Test
-    public void shouldNotAddDirectoryWhenNullSession(){
+    public void shouldNotAddDirectoryWhenNullSession() throws HeuristicRollbackException, HeuristicMixedException, NotSupportedException, RollbackException, SystemException {
         doAnswer(a ->{
             Assert.assertTrue(a.getArguments()[0] instanceof GeneralResponseDTO);
             return null;
         }).when(responseService).error(any(),eq(401));
 
-        responseService.error(null);
         DirectoryDTO directoryDTO = new DirectoryDTO();
         directoryDTO.setPath("c:/windows");
 
@@ -118,13 +117,12 @@ public class DirectoryControllerTest {
     }
 
     @Test
-    public void shouldNotAddDirectoryWhenWrongApiKey(){
+    public void shouldNotAddDirectoryWhenWrongApiKey() throws HeuristicRollbackException, HeuristicMixedException, NotSupportedException, RollbackException, SystemException {
         doAnswer(a ->{
             Assert.assertTrue(a.getArguments()[0] instanceof GeneralResponseDTO);
             return null;
         }).when(responseService).error(any(),eq(401));
 
-        responseService.error(null);
         DirectoryDTO directoryDTO = new DirectoryDTO();
         directoryDTO.setPath("c:/windows");
 
@@ -132,13 +130,12 @@ public class DirectoryControllerTest {
         Assert.assertNull(wrong);
     }
     @Test
-    public void shouldNotAddDirectoryWhenNullApiKey(){
+    public void shouldNotAddDirectoryWhenNullApiKey() throws HeuristicRollbackException, HeuristicMixedException, NotSupportedException, RollbackException, SystemException {
         doAnswer(a ->{
             Assert.assertTrue(a.getArguments()[0] instanceof GeneralResponseDTO);
             return null;
         }).when(responseService).error(any(),eq(401));
 
-        responseService.error(null);
         DirectoryDTO directoryDTO = new DirectoryDTO();
         directoryDTO.setPath("c:/windows");
 
@@ -147,13 +144,12 @@ public class DirectoryControllerTest {
     }
 
     @Test
-    public void shouldAddDitectoryWhenSessionAndKeyOk(){
+    public void shouldAddDitectoryWhenSessionAndKeyOk() throws HeuristicRollbackException, HeuristicMixedException, NotSupportedException, RollbackException, SystemException {
         doAnswer(a ->{
             Assert.assertTrue(a.getArguments()[0] instanceof GeneralResponseDTO);
             return null;
         }).when(responseService).success(any());
 
-        responseService.error(null);
         DirectoryDTO directoryDTO = new DirectoryDTO();
         directoryDTO.setPath("c:/windows");
 
@@ -170,7 +166,7 @@ public class DirectoryControllerTest {
     }
 
     @Test
-    public void shouldReturnDirectoryList(){
+    public void shouldReturnDirectoryList() throws NotSupportedException, SystemException {
         ApiKey apiKeyBySession = apiKeyService.getApiKeyBySession(SESSION_TOKEN);
         List<Directory> directoryList = generateRandomDirList();
         Assert.assertFalse(directoryList.isEmpty());
@@ -180,30 +176,29 @@ public class DirectoryControllerTest {
             Assert.assertTrue(a.getArguments()[0] instanceof DirectoryListDTO);
             DirectoryListDTO directoryListDTO = (DirectoryListDTO) a.getArguments()[0];
             List<DirectoryDTO> collect = directoryList.stream().map(d -> {
-                DirectoryDTO directoryDTO = new DirectoryDTO();
-                directoryDTO.setPath(d.getPath());
-                directoryDTO.setLabel(d.getLabel());
-                return directoryDTO;
+                return DirectoryDTO.getFrom(d);
             }).collect(Collectors.toList());
             Assert.assertTrue(directoryListDTO.getDirectoryList().containsAll(collect));
             return null;
         }).when(responseService).success(any());
+        directoryController.responseService = responseService;
 
         Assert.assertNull(directoryController.getAllDirs(SESSION_TOKEN));
     }
 
     @Test
-    public void shouldNotReturnDirectoryList(){
+    public void shouldNotReturnDirectoryList() throws NotSupportedException, SystemException {
         doAnswer(a ->{
             Assert.assertTrue(a.getArguments()[0] instanceof GeneralResponseDTO);
             return null;
         }).when(responseService).error(any(),eq(401));
+        directoryController.responseService = responseService;
 
         Assert.assertNull(directoryController.getAllDirs(API_TOKEN));
     }
 
     @Test
-    public void shoulrdReturnReturnFileListResponse(){
+    public void shouldReturnReturnFileListResponse() throws NotSupportedException, SystemException {
         ApiKey apiKeyBySession = apiKeyService.getApiKeyBySession(SESSION_TOKEN);
         Directory directory = apiKeyBySession.getDirectoryList().get(0);
         Assert.assertNotNull(directory);
@@ -221,19 +216,22 @@ public class DirectoryControllerTest {
             Assert.assertTrue(fileDTOList.containsAll(fileDTOS(directory.getPath())));
             return null;
         }).when(responseService).success(any());
+        when(directoryService.getFilesOfDir(directory,sessionService.getSessionByToken(SESSION_TOKEN))).thenReturn(
+                Arrays.stream(new File(directory.getPath()).listFiles()).filter(f->!f.isDirectory()).collect(Collectors.toList())
+        );
 
         Response response = directoryController.getDir(SESSION_TOKEN, DirectoryDTO.getFrom(apiKeyBySession.getDirectoryList().get(0)));
         Assert.assertNull(response);
     }
 
     @Test
-    public void shoulrdNotReturnReturnFileListWhenDirectoryIsNotInApiKey(){
+    public void shouldNotReturnReturnFileListWhenDirectoryIsNotInApiKey() throws NotSupportedException, SystemException {
         doAnswer(a ->{
             Assert.assertTrue(a.getArguments()[0] instanceof GeneralResponseDTO);
             GeneralResponseDTO generalResponseDTO = (GeneralResponseDTO) a.getArguments()[0];
             Assert.assertTrue(generalResponseDTO.getMessage().contains("Could not find directory"));
             return null;
-        }).when(responseService).error(any(),eq(404));
+        }).when(responseService).error(any(),eq(400));
 
         DirectoryDTO directoryDTO = new DirectoryDTO();
         directoryDTO.setLabel("main");
@@ -244,13 +242,13 @@ public class DirectoryControllerTest {
     }
 
     @Test
-    public void shoulrdNotReturnReturnFileListWhenDirectoryIsNotInApiKey2(){
+    public void shouldNotReturnReturnFileListWhenDirectoryIsNotInApiKey2() throws NotSupportedException, SystemException {
         doAnswer(a ->{
             Assert.assertTrue(a.getArguments()[0] instanceof GeneralResponseDTO);
             GeneralResponseDTO generalResponseDTO = (GeneralResponseDTO) a.getArguments()[0];
             Assert.assertTrue(generalResponseDTO.getMessage().contains("Could not find directory"));
             return null;
-        }).when(responseService).error(any(),eq(404));
+        }).when(responseService).error(any(),eq(400));
 
         DirectoryDTO directoryDTO = new DirectoryDTO();
         directoryDTO.setLabel("main");
@@ -260,14 +258,13 @@ public class DirectoryControllerTest {
         Assert.assertNull(response);
     }
     @Test
-    public void shoulrdNotReturnReturnFileListWhenDirectoryIsNotInApiKey3(){
+    public void shouldNotReturnReturnFileListWhenDirectoryIsNotInApiKey3() throws NotSupportedException, SystemException {
         doAnswer(a ->{
             Assert.assertTrue(a.getArguments()[0] instanceof GeneralResponseDTO);
             GeneralResponseDTO generalResponseDTO = (GeneralResponseDTO) a.getArguments()[0];
             Assert.assertTrue(generalResponseDTO.getMessage().contains("Could not find directory"));
             return null;
-        }).when(responseService).error(any(),eq(404));
-
+        }).when(responseService).error(any(),eq(400));
         DirectoryDTO directoryDTO = new DirectoryDTO();
         directoryDTO.setLabel(null);
         directoryDTO.setPath(new File("").getAbsolutePath());
@@ -276,13 +273,11 @@ public class DirectoryControllerTest {
         Assert.assertNull(response);
     }
     @Test
-    public void shouldNotReturnFileListSessionWrong(){
+    public void shouldNotReturnFileListSessionWrong() throws NotSupportedException, SystemException {
         doAnswer(a ->{
             Assert.assertTrue(a.getArguments()[0] instanceof GeneralResponseDTO);
-            GeneralResponseDTO generalResponseDTO = (GeneralResponseDTO) a.getArguments()[0];
-            Assert.assertTrue(generalResponseDTO.getMessage().contains("Could not find directory"));
             return null;
-        }).when(responseService).error(any(),eq(404));
+        }).when(responseService).error(any(),eq(401));
 
         DirectoryDTO directoryDTO = DirectoryDTO.getFrom(apiKeyService.getApiKeyBySession(SESSION_TOKEN).getDirectoryList().get(0));
         Response response = directoryController.getDir(SESSION_TOKEN + "sfsf", directoryDTO);
@@ -291,37 +286,46 @@ public class DirectoryControllerTest {
 
 
     @Test
-    public void shouldGetSingleFile(){
+    public void shouldGetSingleFile() throws NotSupportedException, SystemException {
         doAnswer(a->{
             Assert.assertTrue(a.getArguments()[0] instanceof File);
             File file = (File) a.getArguments()[0];
             Assert.assertEquals(".gitignore",file.getName());
             return null;
         }).when(responseService).success(any());
+
         FileDTO fileDTO = new FileDTO(".gitignore","28-12-2018 00:15:27");
+        when(directoryService.getSingleFile(any(),any(),any())).thenAnswer(a->{
+            Directory argumentAt = a.getArgumentAt(1, Directory.class);
+            return Optional.of(new File(argumentAt.getPath() + File.separator + a.getArgumentAt(0,String.class)));
+        });
         directoryController.getDirFile(SESSION_TOKEN,DirectoryDTO.getFrom(apiKeyService.getApiKeyBySession(SESSION_TOKEN).getDirectoryList().get(0)),fileDTO);
     }
 
     @Test
-    public void shouldNotGetSingleFileDateWrong(){
+    public void shouldNotGetSingleFileDateWrong() throws NotSupportedException, SystemException {
         doAnswer(a ->{
             Assert.assertTrue(a.getArguments()[0] instanceof GeneralResponseDTO);
             GeneralResponseDTO generalResponseDTO = (GeneralResponseDTO) a.getArguments()[0];
             Assert.assertTrue(generalResponseDTO.getMessage().contains("Could not find file"));
             return null;
-        }).when(responseService).error(any(),eq(404));
+        }).when(responseService).error(any(),eq(400));
+
         FileDTO fileDTO = new FileDTO(".gitignore","28-12-2017 00:15:27");
+        when(directoryService.getSingleFile(any(),any(),any())).thenAnswer(a->{
+            Directory argumentAt = a.getArgumentAt(1, Directory.class);
+            return Optional.of(new File(argumentAt.getPath() + File.separator + a.getArgumentAt(0,String.class)));
+        });
         directoryController.getDirFile(SESSION_TOKEN,DirectoryDTO.getFrom(apiKeyService.getApiKeyBySession(SESSION_TOKEN).getDirectoryList().get(0)),fileDTO);
 
     }
     @Test
-    public void shouldNotGetSingleFileSessionWrong(){
+    public void shouldNotGetSingleFileSessionWrong() throws NotSupportedException, SystemException {
         doAnswer(a ->{
             Assert.assertTrue(a.getArguments()[0] instanceof GeneralResponseDTO);
-            GeneralResponseDTO generalResponseDTO = (GeneralResponseDTO) a.getArguments()[0];
-            Assert.assertTrue(generalResponseDTO.getMessage().contains("Could not find file"));
             return null;
-        }).when(responseService).error(any(),eq(404));
+        }).when(responseService).error(any(),eq(401));
+
         FileDTO fileDTO = new FileDTO(".gitignore","28-12-2018 00:15:27");
         directoryController.getDirFile("sgjosgji",DirectoryDTO.getFrom(apiKeyService.getApiKeyBySession(SESSION_TOKEN).getDirectoryList().get(0)),fileDTO);
 

@@ -10,8 +10,8 @@ public class DirectoryDTO {
 
     public static DirectoryDTO getFrom(Directory directory){
         DirectoryDTO directoryDTO = new DirectoryDTO();
-        directory.setPath(directory.getPath());
-        directory.setLabel(directory.getLabel());
+        directoryDTO.setPath(directory.getPath());
+        directoryDTO.setLabel(directory.getLabel());
         return directoryDTO;
     }
 }
