@@ -1,9 +1,8 @@
 package org.fytyny.dirdrive.controller;
 
 import org.apache.commons.lang.RandomStringUtils;
-import org.fytyny.dirdrive.dto.DirectoryDTO;
-import org.fytyny.dirdrive.dto.DirectoryListDTO;
-import org.fytyny.dirdrive.dto.GeneralResponseDTO;
+import org.checkerframework.checker.nullness.qual.AssertNonNullIfNonNull;
+import org.fytyny.dirdrive.dto.*;
 import org.fytyny.dirdrive.model.ApiKey;
 import org.fytyny.dirdrive.model.Directory;
 import org.fytyny.dirdrive.model.Session;
@@ -24,9 +23,14 @@ import org.mockito.stubbing.Answer;
 
 import javax.ws.rs.core.Response;
 
-import java.util.LinkedList;
-import java.util.List;
-import java.util.Random;
+import java.io.File;
+import java.time.Instant;
+import java.time.LocalDateTime;
+import java.time.ZoneId;
+import java.time.format.DateTimeFormatter;
+import java.time.temporal.TemporalAccessor;
+import java.util.*;
+import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
@@ -40,6 +44,7 @@ public class DirectoryControllerTest {
     private final static String SESSION_TOKEN = "Working token";
     private final static String API_TOKEN = "Working api token";
 
+    @Mock
     ResponseService responseService;
 
     @Mock
@@ -51,6 +56,8 @@ public class DirectoryControllerTest {
     @Mock
     DirectoryService directoryService;
 
+
+
     @Spy
     DirectoryController directoryController;
 
@@ -61,6 +68,13 @@ public class DirectoryControllerTest {
         directoryController.directoryService = directoryService;
         ApiKey apiKey = new ApiKey();
         apiKey.setToken(API_TOKEN);
+
+        Directory realDirectory = new Directory();
+        realDirectory.setLabel("main");
+        realDirectory.setPath(new File("").getAbsolutePath());
+
+        apiKey.setDirectoryList(Arrays.asList(realDirectory));
+
         when(apiKeyService.getApiKeyBySession(SESSION_TOKEN)).thenReturn(apiKey);
 
         Session session = getSession(SESSION_TOKEN, apiKeyService.getApiKeyBySession(SESSION_TOKEN));
@@ -77,7 +91,7 @@ public class DirectoryControllerTest {
         doAnswer(a ->{
             Assert.assertTrue(a.getArguments()[0] instanceof GeneralResponseDTO);
             return null;
-        }).when(responseService).error(any(),401);
+        }).when(responseService).error(any(),eq(401));
 
         responseService.error(null);
         DirectoryDTO directoryDTO = new DirectoryDTO();
@@ -93,7 +107,7 @@ public class DirectoryControllerTest {
         doAnswer(a ->{
             Assert.assertTrue(a.getArguments()[0] instanceof GeneralResponseDTO);
             return null;
-        }).when(responseService).error(any(),401);
+        }).when(responseService).error(any(),eq(401));
 
         responseService.error(null);
         DirectoryDTO directoryDTO = new DirectoryDTO();
@@ -108,7 +122,7 @@ public class DirectoryControllerTest {
         doAnswer(a ->{
             Assert.assertTrue(a.getArguments()[0] instanceof GeneralResponseDTO);
             return null;
-        }).when(responseService).error(any(),401);
+        }).when(responseService).error(any(),eq(401));
 
         responseService.error(null);
         DirectoryDTO directoryDTO = new DirectoryDTO();
@@ -122,7 +136,7 @@ public class DirectoryControllerTest {
         doAnswer(a ->{
             Assert.assertTrue(a.getArguments()[0] instanceof GeneralResponseDTO);
             return null;
-        }).when(responseService).error(any(),401);
+        }).when(responseService).error(any(),eq(401));
 
         responseService.error(null);
         DirectoryDTO directoryDTO = new DirectoryDTO();
@@ -183,39 +197,159 @@ public class DirectoryControllerTest {
         doAnswer(a ->{
             Assert.assertTrue(a.getArguments()[0] instanceof GeneralResponseDTO);
             return null;
-        }).when(responseService).error(any(),401);
+        }).when(responseService).error(any(),eq(401));
 
         Assert.assertNull(directoryController.getAllDirs(API_TOKEN));
     }
 
     @Test
     public void shoulrdReturnReturnFileListResponse(){
+        ApiKey apiKeyBySession = apiKeyService.getApiKeyBySession(SESSION_TOKEN);
+        Directory directory = apiKeyBySession.getDirectoryList().get(0);
+        Assert.assertNotNull(directory);
+        doAnswer(a->{
+            Assert.assertTrue(a.getArguments()[0] instanceof FileListResponseDTO);
+            FileListResponseDTO fileListResponseDTO = (FileListResponseDTO) a.getArguments()[0];
+            List<FileDTO> fileDTOList = fileListResponseDTO.getFileDTOList();
+            Pattern pattern = Pattern.compile("[0-3][0-9]-[0-1][0-9]-[0-9]{4} [0-2][0-9]:[0-5][0-9]:[0-5][0-9]");
+            fileDTOList.forEach(e->{
+                Assert.assertNotNull(e.getModifyDate());
+                Assert.assertNotNull(e.getName());
+                Assert.assertFalse(e.getName().isEmpty());
+                Assert.assertTrue(e.getModifyDate().matches(pattern.pattern()));
+            });
+            Assert.assertTrue(fileDTOList.containsAll(fileDTOS(directory.getPath())));
+            return null;
+        }).when(responseService).success(any());
 
+        Response response = directoryController.getDir(SESSION_TOKEN, DirectoryDTO.getFrom(apiKeyBySession.getDirectoryList().get(0)));
+        Assert.assertNull(response);
     }
 
     @Test
     public void shoulrdNotReturnReturnFileListWhenDirectoryIsNotInApiKey(){
+        doAnswer(a ->{
+            Assert.assertTrue(a.getArguments()[0] instanceof GeneralResponseDTO);
+            GeneralResponseDTO generalResponseDTO = (GeneralResponseDTO) a.getArguments()[0];
+            Assert.assertTrue(generalResponseDTO.getMessage().contains("Could not find directory"));
+            return null;
+        }).when(responseService).error(any(),eq(404));
 
+        DirectoryDTO directoryDTO = new DirectoryDTO();
+        directoryDTO.setLabel("main");
+        directoryDTO.setPath("C:\\Windows");
+
+        Response response = directoryController.getDir(SESSION_TOKEN, directoryDTO);
+        Assert.assertNull(response);
     }
 
     @Test
-    public void shouldNotReturnFileListSessionWrong(){
+    public void shoulrdNotReturnReturnFileListWhenDirectoryIsNotInApiKey2(){
+        doAnswer(a ->{
+            Assert.assertTrue(a.getArguments()[0] instanceof GeneralResponseDTO);
+            GeneralResponseDTO generalResponseDTO = (GeneralResponseDTO) a.getArguments()[0];
+            Assert.assertTrue(generalResponseDTO.getMessage().contains("Could not find directory"));
+            return null;
+        }).when(responseService).error(any(),eq(404));
 
+        DirectoryDTO directoryDTO = new DirectoryDTO();
+        directoryDTO.setLabel("main");
+        directoryDTO.setPath(null);
+
+        Response response = directoryController.getDir(SESSION_TOKEN, directoryDTO);
+        Assert.assertNull(response);
     }
+    @Test
+    public void shoulrdNotReturnReturnFileListWhenDirectoryIsNotInApiKey3(){
+        doAnswer(a ->{
+            Assert.assertTrue(a.getArguments()[0] instanceof GeneralResponseDTO);
+            GeneralResponseDTO generalResponseDTO = (GeneralResponseDTO) a.getArguments()[0];
+            Assert.assertTrue(generalResponseDTO.getMessage().contains("Could not find directory"));
+            return null;
+        }).when(responseService).error(any(),eq(404));
+
+        DirectoryDTO directoryDTO = new DirectoryDTO();
+        directoryDTO.setLabel(null);
+        directoryDTO.setPath(new File("").getAbsolutePath());
+
+        Response response = directoryController.getDir(SESSION_TOKEN, directoryDTO);
+        Assert.assertNull(response);
+    }
+    @Test
+    public void shouldNotReturnFileListSessionWrong(){
+        doAnswer(a ->{
+            Assert.assertTrue(a.getArguments()[0] instanceof GeneralResponseDTO);
+            GeneralResponseDTO generalResponseDTO = (GeneralResponseDTO) a.getArguments()[0];
+            Assert.assertTrue(generalResponseDTO.getMessage().contains("Could not find directory"));
+            return null;
+        }).when(responseService).error(any(),eq(404));
+
+        DirectoryDTO directoryDTO = DirectoryDTO.getFrom(apiKeyService.getApiKeyBySession(SESSION_TOKEN).getDirectoryList().get(0));
+        Response response = directoryController.getDir(SESSION_TOKEN + "sfsf", directoryDTO);
+        Assert.assertNull(response);
+    }
+
 
     @Test
     public void shouldGetSingleFile(){
-
+        doAnswer(a->{
+            Assert.assertTrue(a.getArguments()[0] instanceof File);
+            File file = (File) a.getArguments()[0];
+            Assert.assertEquals(".gitignore",file.getName());
+            return null;
+        }).when(responseService).success(any());
+        FileDTO fileDTO = new FileDTO(".gitignore","28-12-2018 00:15:27");
+        directoryController.getDirFile(SESSION_TOKEN,DirectoryDTO.getFrom(apiKeyService.getApiKeyBySession(SESSION_TOKEN).getDirectoryList().get(0)),fileDTO);
     }
 
     @Test
-    public void shouldNotGetSingleFileWhenDirNotPartOfApiKey(){
+    public void shouldNotGetSingleFileDateWrong(){
+        doAnswer(a ->{
+            Assert.assertTrue(a.getArguments()[0] instanceof GeneralResponseDTO);
+            GeneralResponseDTO generalResponseDTO = (GeneralResponseDTO) a.getArguments()[0];
+            Assert.assertTrue(generalResponseDTO.getMessage().contains("Could not find file"));
+            return null;
+        }).when(responseService).error(any(),eq(404));
+        FileDTO fileDTO = new FileDTO(".gitignore","28-12-2017 00:15:27");
+        directoryController.getDirFile(SESSION_TOKEN,DirectoryDTO.getFrom(apiKeyService.getApiKeyBySession(SESSION_TOKEN).getDirectoryList().get(0)),fileDTO);
+
+    }
+    @Test
+    public void shouldNotGetSingleFileSessionWrong(){
+        doAnswer(a ->{
+            Assert.assertTrue(a.getArguments()[0] instanceof GeneralResponseDTO);
+            GeneralResponseDTO generalResponseDTO = (GeneralResponseDTO) a.getArguments()[0];
+            Assert.assertTrue(generalResponseDTO.getMessage().contains("Could not find file"));
+            return null;
+        }).when(responseService).error(any(),eq(404));
+        FileDTO fileDTO = new FileDTO(".gitignore","28-12-2018 00:15:27");
+        directoryController.getDirFile("sgjosgji",DirectoryDTO.getFrom(apiKeyService.getApiKeyBySession(SESSION_TOKEN).getDirectoryList().get(0)),fileDTO);
 
     }
 
-    @Test
-    void shouldNotGetSingleFileSessionWrong(){
+    private List<FileDTO> fileDTOS(String path){
+        File dir = new File(path).getAbsoluteFile();
+        Assert.assertTrue(dir.exists());
+        File[] files = dir.listFiles();
+        List<FileDTO> fileDTOS = new LinkedList<>();
+        fileDTOS = addAll(files,fileDTOS);
+        System.out.println("Created file list dto: " + fileDTOS.toString());
+        return fileDTOS;
+    }
 
+    private List<FileDTO> addAll(File[] files, List<FileDTO> fileDTOS){
+        for (File file : files){
+            if (!file.isDirectory()){
+                long lastMod = file.lastModified();
+                DateTimeFormatter dateTimeFormatter = DateTimeFormatter.ofPattern("dd-MM-yyyy HH:mm:ss");
+                Instant temporal = Instant.ofEpochMilli(lastMod);
+                LocalDateTime localDateTime = LocalDateTime.ofInstant(temporal, ZoneId.systemDefault());
+                String format = dateTimeFormatter.format(localDateTime);
+                FileDTO fileDTO = new FileDTO(file.getName(), format);
+                fileDTOS.add(fileDTO);
+            }
+        }
+        return fileDTOS;
     }
 
     private List<Directory> generateRandomDirList(){
