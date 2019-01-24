@@ -1,7 +1,10 @@
 package org.fytyny.dirdrive.service;
 
+import javax.ejb.Stateless;
 import javax.ws.rs.core.Response;
 import java.util.Map;
+
+@Stateless
 public class ResponseServiceImpl implements ResponseService {
 
     @Override

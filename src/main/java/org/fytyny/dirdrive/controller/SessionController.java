@@ -43,7 +43,6 @@ public class SessionController {
         if (byToken == null){
             return responseService.error(GeneralResponseDTO.authenticationFailed(),401);
         }
-       ;
         return responseService.success(sessionService.createSession(byToken));
     }
 

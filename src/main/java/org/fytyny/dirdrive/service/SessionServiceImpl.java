@@ -6,9 +6,11 @@ import org.fytyny.dirdrive.model.Session;
 import org.fytyny.dirdrive.repository.SessionRepository;
 import java.util.UUID;
 
+import javax.ejb.Stateless;
 import javax.enterprise.inject.Any;
 import javax.inject.Inject;
 
+@Stateless
 public class SessionServiceImpl implements SessionService {
 
     @Any
