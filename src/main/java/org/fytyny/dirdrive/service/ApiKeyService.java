@@ -11,5 +11,7 @@ public interface ApiKeyService {
 
     boolean existByToken(String token);
 
+    ApiKey getByToken(String token);
+
     boolean containsDirectory(ApiKey apiKey, Directory directory);
 }

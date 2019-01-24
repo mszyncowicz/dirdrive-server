@@ -44,6 +44,11 @@ public class ApiKeyServiceImpl implements  ApiKeyService{
     }
 
     @Override
+    public ApiKey getByToken(String token) {
+        return apiKeyRepository.getByToken(token);
+    }
+
+    @Override
     public boolean containsDirectory(ApiKey apiKey, Directory directory) {
         return existByToken(apiKey.getToken()) && apiKey.getDirectoryList().stream().map(d -> d.getPath()).collect(Collectors.toList()).contains(directory.getPath());
     }

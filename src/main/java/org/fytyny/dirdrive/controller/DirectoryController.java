@@ -46,7 +46,7 @@ public class DirectoryController {
     UserTransaction userTransaction;
 
     public static final String X_SESSION_TOKEN = "X-session=token";
-    private static final String X_API_KEY = "X-api-key";
+    public static final String X_API_KEY = "X-api-key";
 
     @POST
     @Path("/add")
