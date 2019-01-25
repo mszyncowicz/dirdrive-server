@@ -1,5 +1,7 @@
 package org.fytyny.dirdrive.controller;
 
+import org.fytyny.dirdrive.dto.DirectoryDTO;
+
 import javax.ws.rs.core.Application;
 import java.util.HashSet;
 import java.util.Set;
@@ -11,6 +13,7 @@ public class RSApplication extends Application {
 
 
         singletons.add(new SessionController());
+        singletons.add(new DirectoryController());
 
     }
 
@@ -23,6 +26,7 @@ public class RSApplication extends Application {
     public Set<Class<?>> getRestClasses()
     {
         Set<Class<?>> s = new HashSet<Class<?>>();
+        s.add(DirectoryDTO.class);
         return s;
     }
 

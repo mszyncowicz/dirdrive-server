@@ -1,5 +1,6 @@
 package org.fytyny.dirdrive.model;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import lombok.Data;
 
 import javax.persistence.Entity;
@@ -11,6 +12,7 @@ import java.util.UUID;
 @Entity
 public class Directory {
 
+    @JsonIgnore
     @Id
     UUID id;
 

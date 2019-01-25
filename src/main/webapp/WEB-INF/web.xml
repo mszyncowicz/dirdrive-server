@@ -5,7 +5,7 @@
          version="4.0">
     <context-param>
         <param-name>resteasy.resources</param-name>
-        <param-value>org.fytyny.dirdrive.controller.SessionController, org.fytyny.dirdrive.controller.DefaultController</param-value>
+        <param-value>org.fytyny.dirdrive.controller.SessionController, org.fytyny.dirdrive.controller.DefaultController, org.fytyny.dirdrive.controller.DirectoryController</param-value>
 
     </context-param>
     <context-param>

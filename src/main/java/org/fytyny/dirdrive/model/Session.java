@@ -1,5 +1,6 @@
 package org.fytyny.dirdrive.model;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import lombok.*;
 
 import javax.persistence.*;
@@ -14,12 +15,14 @@ public class Session {
     public static final int scale = 20;
 
     @Id
+    @JsonIgnore
     private UUID id;
 
     @Column(length = scale)
     private String token;
 
     @ManyToOne(targetEntity = ApiKey.class, optional = false)
+    @JsonIgnore
     private ApiKey apiKey;
 
     public Session() {

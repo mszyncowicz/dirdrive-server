@@ -9,8 +9,16 @@ public class FileDTO {
 
     String modifyDate;
 
+    public FileDTO(){
+
+    }
+
     public FileDTO(String name, String modifyDate){
      this.name= name;
      this.modifyDate = modifyDate;
+    }
+
+    public static FileDTO fromString(String a){
+        return new FileDTO("sfasf","efasf");
     }
 }

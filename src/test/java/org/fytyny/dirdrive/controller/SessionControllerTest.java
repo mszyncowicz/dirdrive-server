@@ -20,7 +20,7 @@ import org.mockito.Spy;
 import org.mockito.runners.MockitoJUnitRunner;
 import org.mockito.stubbing.Answer;
 
-import javax.transaction.UserTransaction;
+import javax.transaction.*;
 import javax.ws.rs.core.Response;
 import java.io.File;
 import java.util.Arrays;
@@ -69,7 +69,7 @@ public class SessionControllerTest {
     }
 
     @Test
-    public void shouldReturnNewSession(){
+    public void shouldReturnNewSession() throws HeuristicRollbackException, HeuristicMixedException, NotSupportedException, RollbackException, SystemException {
         Session generated = generateRandomSession(apiKeyService.getByToken(API_TOKEN));
         when(sessionService.createSession(any())).then( a -> {
             Assert.assertTrue(a.getArguments()[0].equals(apiKeyService.getByToken(API_TOKEN)));
@@ -89,7 +89,7 @@ public class SessionControllerTest {
     }
 
     @Test
-    public void shouldReturnErrorWhenApiKeyWrong(){
+    public void shouldReturnErrorWhenApiKeyWrong() throws HeuristicRollbackException, HeuristicMixedException, NotSupportedException, RollbackException, SystemException {
 
         doAnswer( a ->{
             GeneralResponseDTO argumentAt = a.getArgumentAt(0, GeneralResponseDTO.class);

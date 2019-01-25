@@ -45,7 +45,7 @@ public class DirectoryController {
     @Inject
     UserTransaction userTransaction;
 
-    public static final String X_SESSION_TOKEN = "X-session=token";
+    public static final String X_SESSION_TOKEN = "X-session-token";
     public static final String X_API_KEY = "X-api-key";
 
     @POST
@@ -155,9 +155,15 @@ public class DirectoryController {
     @Path("/get/file")
     @Consumes(MediaType.APPLICATION_JSON)
     @Produces(MediaType.APPLICATION_OCTET_STREAM)
-    public Response getDirFile(@HeaderParam(X_SESSION_TOKEN) String sessionToken, DirectoryDTO directoryDTO, FileDTO fileDTO) throws SystemException, NotSupportedException {
+    public Response getDirFile(@HeaderParam(X_SESSION_TOKEN) String sessionToken, FileRequest fileRequest) throws SystemException, NotSupportedException {
+        DirectoryDTO directoryDTO = fileRequest.getDirectoryDTO();
+        FileDTO fileDTO = fileRequest.getFileDTO();
         if (sessionToken == null) {
             return responseService.error(GeneralResponseDTO.authenticationFailed(), 401);
+        }
+        if (directoryDTO == null || fileDTO == null){
+            return responseService.error(GeneralResponseDTO.fileIsNull(), 400);
+
         }
         userTransaction.begin();
         ApiKey apiKeyBySession = apiKeyService.getApiKeyBySession(sessionToken);

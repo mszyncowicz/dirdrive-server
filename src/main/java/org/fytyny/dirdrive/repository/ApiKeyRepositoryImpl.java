@@ -37,6 +37,7 @@ public class ApiKeyRepositoryImpl implements ApiKeyRepository {
 
     @Override
     public ApiKey getByToken(String token) {
+        if (token == null) return null;
         Query query = entityManager.createQuery("SELECT s from ApiKey s where s.token = :token");
         query.setParameter("token",token);
         List resultList = query.getResultList();

@@ -3,13 +3,15 @@ package org.fytyny.dirdrive.controller;
 import org.fytyny.dirdrive.dto.ApiKeyDTO;
 import org.fytyny.dirdrive.dto.GeneralResponseDTO;
 import org.fytyny.dirdrive.model.ApiKey;
+import org.fytyny.dirdrive.model.Session;
 import org.fytyny.dirdrive.service.ApiKeyService;
 import org.fytyny.dirdrive.service.ResponseService;
 import org.fytyny.dirdrive.service.SessionService;
 
 import javax.enterprise.inject.Any;
 import javax.inject.Inject;
-import javax.transaction.UserTransaction;
+import javax.transaction.*;
+import javax.transaction.NotSupportedException;
 import javax.ws.rs.*;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
@@ -34,16 +36,20 @@ public class SessionController {
     @Inject
     UserTransaction userTransaction;
 
-    @POST
+    @GET
     @Path("/create")
     @Consumes(MediaType.APPLICATION_JSON)
     @Produces(MediaType.APPLICATION_JSON)
-    public Response createSession(@HeaderParam(DirectoryController.X_API_KEY) String apiKey){
+    public Response createSession(@HeaderParam(DirectoryController.X_API_KEY) String apiKey) throws SystemException, NotSupportedException, HeuristicRollbackException, HeuristicMixedException, RollbackException {
+        userTransaction.begin();
         ApiKey byToken = apiKeyService.getByToken(apiKey);
         if (byToken == null){
+            userTransaction.commit();
             return responseService.error(GeneralResponseDTO.authenticationFailed(),401);
         }
-        return responseService.success(sessionService.createSession(byToken));
+        Session session = sessionService.createSession(byToken);
+        userTransaction.commit();
+        return responseService.success(session);
     }
 
 }

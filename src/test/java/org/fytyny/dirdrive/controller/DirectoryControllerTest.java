@@ -299,7 +299,10 @@ public class DirectoryControllerTest {
             Directory argumentAt = a.getArgumentAt(1, Directory.class);
             return Optional.of(new File(argumentAt.getPath() + File.separator + a.getArgumentAt(0,String.class)));
         });
-        directoryController.getDirFile(SESSION_TOKEN,DirectoryDTO.getFrom(apiKeyService.getApiKeyBySession(SESSION_TOKEN).getDirectoryList().get(0)),fileDTO);
+        FileRequest fileRequest = new FileRequest();
+        fileRequest.setFileDTO(fileDTO);
+        fileRequest.setDirectoryDTO(DirectoryDTO.getFrom(apiKeyService.getApiKeyBySession(SESSION_TOKEN).getDirectoryList().get(0)));
+        directoryController.getDirFile(SESSION_TOKEN,fileRequest);
     }
 
     @Test
@@ -316,7 +319,10 @@ public class DirectoryControllerTest {
             Directory argumentAt = a.getArgumentAt(1, Directory.class);
             return Optional.of(new File(argumentAt.getPath() + File.separator + a.getArgumentAt(0,String.class)));
         });
-        directoryController.getDirFile(SESSION_TOKEN,DirectoryDTO.getFrom(apiKeyService.getApiKeyBySession(SESSION_TOKEN).getDirectoryList().get(0)),fileDTO);
+        FileRequest fileRequest = new FileRequest();
+        fileRequest.setFileDTO(fileDTO);
+        fileRequest.setDirectoryDTO(DirectoryDTO.getFrom(apiKeyService.getApiKeyBySession(SESSION_TOKEN).getDirectoryList().get(0)));
+        directoryController.getDirFile(SESSION_TOKEN,fileRequest);
 
     }
     @Test
@@ -327,7 +333,10 @@ public class DirectoryControllerTest {
         }).when(responseService).error(any(),eq(401));
 
         FileDTO fileDTO = new FileDTO(".gitignore","28-12-2018 00:15:27");
-        directoryController.getDirFile("sgjosgji",DirectoryDTO.getFrom(apiKeyService.getApiKeyBySession(SESSION_TOKEN).getDirectoryList().get(0)),fileDTO);
+        FileRequest fileRequest = new FileRequest();
+        fileRequest.setFileDTO(fileDTO);
+        fileRequest.setDirectoryDTO(DirectoryDTO.getFrom(apiKeyService.getApiKeyBySession(SESSION_TOKEN).getDirectoryList().get(0)));
+        directoryController.getDirFile(SESSION_TOKEN + "sfsf",fileRequest);
 
     }
 

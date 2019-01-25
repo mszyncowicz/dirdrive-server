@@ -22,6 +22,13 @@ public class GeneralResponseDTO {
         return generalResponseDTO;
     }
 
+    public static GeneralResponseDTO fileIsNull() {
+        GeneralResponseDTO generalResponseDTO = new GeneralResponseDTO();
+        generalResponseDTO.message = "File is null";
+        generalResponseDTO.setCode(400);
+        return generalResponseDTO;
+    }
+
     public static GeneralResponseDTO directoryNotFound() {
         return new GeneralResponseDTO("Could not find directory", 400);
     }

@@ -1,6 +1,7 @@
 package org.fytyny.dirdrive.service;
 
 import javax.ejb.Stateless;
+import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 import java.util.Map;
 
@@ -33,7 +34,7 @@ public class ResponseServiceImpl implements ResponseService {
 
     @Override
     public Response error(Object entity, Integer code) {
-        return Response.serverError().entity(entity).status(code).build();
+        return Response.serverError().type(MediaType.APPLICATION_JSON_TYPE).entity(entity).status(code).build();
     }
 
     private Response.ResponseBuilder applyHeaders(Response.ResponseBuilder resultBuilder,Map<String, String> headers){
